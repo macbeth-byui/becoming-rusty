@@ -50,6 +50,7 @@ fn start(ip_address : &str, port : u16, root_path : &str) -> Result<(),String> {
 
 
 fn run_shell() {
+    println!("Starting Shell.");
     let mut input = String::new();
     let stdin = io::stdin();
     loop {
