@@ -1,0 +1,174 @@
+// use std::time::{SystemTime, UNIX_EPOCH};
+use raylib::prelude::*;
+use std::thread;
+
+const FRACTAL_ITERATIONS: i32 = 64;
+const FRACTAL_ESCAPE: f64 = 4.0;
+const WINDOW_HEIGHT: i32 = 800;
+const WINDOW_WIDTH: i32 = 800;
+const INIT_VIRTUAL_GRID_XMIN: f64 = -2.0;
+const INIT_VIRTUAL_GRID_XMAX: f64 = 2.0;
+const INIT_VIRTUAL_GRID_YMIN: f64 = -2.0;
+const INIT_VIRTUAL_GRID_YMAX: f64 = 2.0;
+
+struct Mandelbrot {
+    xmin: f64,
+    xmax: f64,
+    ymin: f64,
+    ymax: f64,
+    width: i32,
+    height: i32,
+}
+
+struct Point {
+    x : i32,
+    y : i32,
+    color : Color
+}
+
+impl Mandelbrot {
+    pub fn new() -> Mandelbrot {
+        Mandelbrot {
+            xmin: INIT_VIRTUAL_GRID_XMIN,
+            xmax: INIT_VIRTUAL_GRID_XMAX,
+            ymin: INIT_VIRTUAL_GRID_YMIN,
+            ymax: INIT_VIRTUAL_GRID_YMAX,
+            width: WINDOW_WIDTH,
+            height: WINDOW_HEIGHT,
+        }
+    }
+
+    fn calc_mandelbrot_point(x: f64, y: f64) -> Color {
+        let mut prev_x: f64 = x;
+        let mut prev_y: f64 = y;
+        let mut curr_x: f64;
+        let mut curr_y: f64;
+        let mut escape_count: i32 = -1;
+        for count in 0..FRACTAL_ITERATIONS {
+            curr_x = (prev_x * prev_x) - (prev_y * prev_y) + x;
+            curr_y = (2.0 * (prev_x * prev_y)) + y;
+            prev_x = curr_x;
+            prev_y = curr_y;
+            if curr_x * curr_x + curr_y * curr_y > FRACTAL_ESCAPE {
+                escape_count = count;
+                break;
+            }
+        }
+        if escape_count == -1 {
+            return Color::BLACK;
+        }
+        return Color {
+            r: (escape_count * 5 % 255) as u8,
+            g: (escape_count * 5 % 255) as u8,
+            b: 235 as u8,
+            a: 255
+        };
+    }
+
+    fn draw_mandelbrot_worker(x : f64, y : f64, xmin : f64, xmax : f64, ymin : f64, ymax : f64, delta_x : f64, 
+                              delta_y : f64, width : i32, height : i32) -> Vec<Point> {
+        let mut results = Vec::<Point>::new();
+        while y <= ymax {
+            let color = Mandelbrot::calc_mandelbrot_point(x, y);
+            let xx = ((x - xmin) / (xmax - xmin) * width as f64) as i32;
+            let yy = ((y - ymin) / (ymax - ymin) * height as f64) as i32;
+            results.push(Point {x: xx, y: yy, color: color});
+            y += delta_y;
+        }
+        results
+    }
+
+    fn draw_mandelbrot(&self, image : &mut Image) {
+        let mut threads = Vec::<thread::JoinHandle<Vec<Point>>>::new();
+        let mut x = self.xmin;
+        while x <= self.xmax {
+            let delta_x: f64 = (self.xmax - self.xmin) / self.width as f64;
+            let delta_y: f64 = (self.ymax - self.ymin) / self.height as f64;
+            let xx: f64 = x;
+            let yy: f64 = self.ymin;
+            let xmin = self.xmin;
+            let xmax = self.xmax;
+            let ymin = self.ymin;
+            let ymax = self.xmax;
+            let width = self.width;
+            let height = self.height;
+            let worker = thread::spawn(move || Mandelbrot::draw_mandelbrot_worker(xx, yy, 
+                xmin, xmax, ymin, ymax, delta_x, delta_y, width, height));
+            x += delta_x;
+        }
+        for thread_handle in threads {
+            let result = thread_handle.join().unwrap();
+            for point in result {
+                image.draw_pixel(point.x, point.y, point.color);
+            }
+        }
+    }
+
+    fn zoom(&mut self, x: i32, y: i32, ratio: f64) {
+        let virtual_grid_x_size = ((self.xmax - self.xmin) / 2.0) * ratio;
+        let virtual_grid_y_size = ((self.ymax - self.ymin) / 2.0) * ratio;
+        let virtual_x = (x as f64 / self.width as f64) * (self.xmax - self.xmin) + self.xmin;
+        let virtual_y = (y as f64 / self.height as f64) * (self.ymax - self.ymin) + self.ymin;
+        self.xmin = virtual_x - virtual_grid_x_size;
+        self.xmax = virtual_x + virtual_grid_x_size;
+        self.ymin = virtual_y - virtual_grid_y_size;
+        self.ymax = virtual_y + virtual_grid_y_size;
+    }
+
+    fn center(&mut self, x: i32, y: i32) {
+        self.zoom(x, y, 1.0)
+    }
+}
+
+fn main() {
+    let mut mandelbrot = Mandelbrot::new();
+
+    let (mut rl, thread) = raylib::init()
+        .size(WINDOW_HEIGHT, WINDOW_WIDTH)
+        .title("Mandelbrot")
+        .build();
+
+    let mut image = Image::gen_image_color(WINDOW_HEIGHT, WINDOW_WIDTH, Color::BLACK);
+
+    mandelbrot.center(240, 350);
+
+    // let mut max = 0;
+    // let mut min = 999999;
+    // let mut count = 0;
+    // let mut sum = 0;
+
+    rl.set_target_fps(30);
+    
+    while !rl.window_should_close() {
+        
+        // let time1 = SystemTime::now()
+        //     .duration_since(UNIX_EPOCH)
+        //     .unwrap()
+        //     .as_micros();
+
+        mandelbrot.zoom(400, 400, 0.95);
+        mandelbrot.draw_mandelbrot(&mut image);
+        let texture = rl.load_texture_from_image(&thread, &image).expect("Error creating texture");
+
+        let mut d = rl.begin_drawing(&thread);
+        d.clear_background(Color::BLACK);
+        d.draw_texture(&texture, 0, 0, Color::WHITE);
+
+        // let time2 = SystemTime::now()
+        // .duration_since(UNIX_EPOCH)
+        // .unwrap()
+        // .as_micros();
+
+        // let total = time2 - time1;
+        // count += 1;
+        // sum += total;
+        // if total > max {
+        //     max = total;
+        // }
+        // if total < min {
+        //     min = total;
+        // }
+        // println!("min = {} max = {} avg = {}", min, max, sum / count);
+
+    }
+}
