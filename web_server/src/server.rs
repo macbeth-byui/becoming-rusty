@@ -11,13 +11,6 @@ pub struct Server
     file_system : FileSystem,
 }
 
-/*
-Server thread will stop if failure to read incoming client
-    ThreadFamily will go out of scope
-        Client threads will run until done and message won't be received
-Client thread will stop after sending a response or if error reading/writing
-
-*/
 impl Server
 {
 
@@ -31,12 +24,12 @@ impl Server
         for stream in self.listener.incoming() {
             if let Ok(stream) = stream {
                 if stream.set_read_timeout(Some(Duration::from_secs(10))).is_err() {
-                    println!("Failure to set read timeout");
+                    // println!("Failure to set read timeout");
                     break;
                 }
                 let mut client = Client::new(stream, self.file_system.clone());
                 if thread_family.request(move || client.run()).is_none() {
-                    println!("ThreadFamily Failure.");
+                    // println!("ThreadFamily Failure.");
                     break;
                 }
             } 

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::net::TcpStream;
 use crate::request::Request;
 use crate::response::Response;
@@ -31,30 +30,24 @@ impl Client {
        
     }
 
-    // TODO: SUpport index.htm (config file)
-    // TODO: Use chaining for building response
-
     fn process_request(&self, request : Request) -> Response {
         let mut target = request.target;
         if target == "/" {
             target = "/index.html".to_string();
         }
         let file = self.file_system.get_file(&target);
-        if let Ok(text) = file {
-            let version = request.version.clone();
-            let status_code = String::from("200");
-            let status_text = String::from("OK");
-            let mut headers = HashMap::<String, String>::new();
-            headers.insert("Content-Type".to_string(), "text/html".to_string());
-            headers.insert("Content-Length".to_string(), text.len().to_string());
-            return Response::new(version, status_code, status_text, headers, text);
+        let mut response = Response::new();
+        if let Ok(text) = file 
+        {
+            response.version(&request.version)
+                    .ok()
+                    .body_html(&text);        
         } 
-        let version = request.version.clone();
-        let status_code = String::from("404");
-        let status_text = String::from("NOT FOUND");
-        let headers = HashMap::<String, String>::new();
-        let body = String::new();        
-        Response::new(version, status_code, status_text, headers, body)
+        else {
+            response.version(&request.version)
+                    .not_found();
+        }
+        response
     }
     
 

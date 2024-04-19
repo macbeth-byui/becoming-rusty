@@ -20,10 +20,14 @@ impl Response {
 
     // TODO: Add functions set Content-Type & Content-Size
 
-    pub fn new(version : String, status_code : String,
-        status_text : String, headers : HashMap<String,String>,
-        body : String) -> Self {
-            Response {version, status_code, status_text, headers, body}
+    pub fn new() -> Self {
+        Response {
+            version: "".to_string(), 
+            status_code: "".to_string(), 
+            status_text: "".to_string(), 
+            headers: HashMap::<String,String>::new(), 
+            body: "".to_string()
+        }
     }
     
     pub fn write_to_stream(&mut self, client : &mut TcpStream) -> io::Result<()> {
@@ -43,5 +47,35 @@ impl Response {
         writer.write_all(&data)?;
 
         Ok(())
+    }
+
+    pub fn version(&mut self, version : &str) -> &mut Self {
+        self.version = version.to_string();
+        self
+    }
+
+    pub fn ok(&mut self) -> &mut Self {
+        self.status_code = "200".to_string();
+        self.status_text = "OK".to_string();
+        self
+    }
+
+    pub fn not_found(&mut self) -> &mut Self {
+        self.status_code = "404".to_string();
+        self.status_text = "NOT FOUND".to_string();
+        self
+    }
+
+    pub fn header(&mut self, key : &str, value : &str) -> &mut Self {
+        let _ = self.headers.insert(key.to_string(), value.to_string());
+        self
+    }
+
+    pub fn body_html(&mut self, text : &str) -> &mut Self {
+        let length = text.len();
+        self.header("Content-Type", "text/html")
+            .header("Content-Length", &length.to_string());
+        self.body = text.to_string();
+        self
     }
 }
