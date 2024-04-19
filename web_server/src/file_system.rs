@@ -7,15 +7,26 @@ pub struct FileSystem {
 }
 
 impl FileSystem {
+
+    /* Create a FileSystem using the path.
+     * 
+     * TODO: Can we make this a singleton?
+     */
     pub fn new(path : &str) -> Self {
         FileSystem {path : path.to_string()}
     }
 
+    /* Verify if the folder path is valid
+     */
     pub fn check_folder(&self) -> io::Result<()> {
         fs::read_dir(&self.path)?;
         Ok(())
     }    
 
+    /* Obtain a text file
+     * 
+     * TODO: Support for binary.
+     */
     pub fn get_file(&self, target : &str) -> io::Result<String> {
         let file = File::open(format!("{}/{}",self.path, target))?;
         let mut reader = BufReader::new(file);

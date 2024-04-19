@@ -14,12 +14,6 @@ pub struct Response {
 
 impl Response {
 
-    // TODO: Add functions to create status code and text
-
-    // TODO: Add functions to set version
-
-    // TODO: Add functions set Content-Type & Content-Size
-
     pub fn new() -> Self {
         Response {
             version: "".to_string(), 
