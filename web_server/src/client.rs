@@ -44,18 +44,15 @@ impl Client {
             target = "/index.html".to_string();
         }
 
-        // TODO: Return back binary or text
         let file = self.file_system.get_file(&target);
-
-        // TODO: Validate the file type with any headers requiring a specific type
-
+        
         // Send back success if found or error if not found
         let mut response = Response::new();
-        if let Ok(text) = file 
+        if let Ok((data, mime_type)) = file 
         {
             response.version(&request.version)
                     .ok()
-                    .body_html(&text);        
+                    .body(&data, mime_type);        
         } 
         else {
             response.version(&request.version)

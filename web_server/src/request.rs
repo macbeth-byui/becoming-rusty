@@ -18,14 +18,22 @@ pub struct Request {
 
 impl Request {
 
+    /* This function is the only way to create a Request object.  The provided
+     * TcpStream for the client is used to read the command, the headers,
+     * and the body of the request.
+     */
     pub fn read_from_stream(stream : &mut TcpStream) -> io::Result<Request> {
-        // Read the command line and the header.  The header may be empty.
-        // If the header has a Content-Length, then we will read the body
         let mut reader = BufReader::new(stream);
+
+        // Read the command line (required)
         let (method, target, version) = 
             Request::read_request_command(&mut reader)?;
+
+        // Read the headers which might return back as empty.
         let headers = 
             Request::read_request_headers(&mut reader)?;
+
+        // Read the body only if there is Content-Length in the headers
         let body = match headers.get("Content-Length") {
             Some(str_value) => {
                 let length = match str::parse::<u32>(str_value) {
@@ -37,6 +45,8 @@ impl Request {
             }
             None => String::new() // Default body is empty string
         };
+
+        // Create the Request object
         Ok(Request {method, target, version, headers, body})
     }
 
