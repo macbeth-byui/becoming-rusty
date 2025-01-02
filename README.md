@@ -9,7 +9,7 @@ One has to start somewhere.
 
 ## Current Activity
 
-I'm writing an HTTP Server with a custom Thread Pool (called it a Thread Family).  It is located in the web_server folder.
+Starting the Markdown to HTML Converter.  
 
 ## Useful Links
 
@@ -22,14 +22,29 @@ I'm writing an HTTP Server with a custom Thread Pool (called it a Thread Family)
 
 * ChatGPT Helped me with a starting list:
 	- [x] **Basic CLI Calculator**: Implement a simple command-line calculator that performs basic arithmetic operations.
+
+		* Post-fix notation
+
 	- [x] **Reverse String**: Write a program that takes a string input and reverses it.
 	- [x] **Palindrome Checker**: Create a program that checks if a given string is a palindrome.
 	- [x] **Fibonacci Sequence**: Write a function to generate the Fibonacci sequence up to a certain number of terms.
 	- [x] **Prime Number Checker**: Develop a program that determines whether a given number is prime or not.
 	- [x] **Temperature Converter**: Build a program that converts temperature between Celsius and Fahrenheit.
 	- [x] **File Reader**: Write a program to read a text file and display its contents.
+
+		* Display contents of file
+		* Support arrow key scrolling
+
 	- [x] **File Writer**: Create a program that writes data to a text file.
-	- [ ] **Simple HTTP Server**: Implement a basic HTTP server that serves static files.
+
+		* Support piping 
+
+	- [x] **Simple HTTP Server**: Implement a basic HTTP server that serves static files.
+
+		* Support for html and images
+		* Support for thread families
+		* **TODO**: Add configuration file, logging, active display, multiple mime-types
+
 	- [ ] **Markdown to HTML Converter**: Build a program that converts Markdown files to HTML.
 	- [ ] **Simple Todo List**: Create a simple command-line todo list application.
 	- [ ] **Basic Image Processing**: Develop a program that performs basic image processing operations like resizing or converting formats.

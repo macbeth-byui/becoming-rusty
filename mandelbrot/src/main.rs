@@ -1,8 +1,9 @@
 // use std::time::{SystemTime, UNIX_EPOCH};
 use raylib::prelude::*;
 use std::thread;
+use std::collections::HashSet;
 
-const FRACTAL_ITERATIONS: i32 = 150;
+const FRACTAL_ITERATIONS: i32 = 100;
 const FRACTAL_ESCAPE: f64 = 2.0;
 const WINDOW_HEIGHT: i32 = 800;
 const WINDOW_WIDTH: i32 = 800;
@@ -194,6 +195,8 @@ fn main() {
 
     let mut image = Image::gen_image_color(WINDOW_HEIGHT, WINDOW_WIDTH, Color::BLACK);
 
+    mandelbrot.draw_mandelbrot(&mut image);
+
     // let mut max = 0;
     // let mut min = 999999;
     // let mut count = 0;
@@ -201,7 +204,7 @@ fn main() {
 
     rl.set_target_fps(60);
 
-    let mut redraw = true;
+    let mut keys : HashSet<KeyboardKey> = HashSet::new();
 
     while !rl.window_should_close() {
         // let time1 = SystemTime::now()
@@ -209,34 +212,51 @@ fn main() {
         //     .unwrap()
         //     .as_micros();
 
+        for key in keys.clone() {
+            if rl.is_key_up(key) {
+                keys.remove(&key);
+            }
+        }
+
         let pressed_key = rl.get_key_pressed();
-        let mut zoom = 1.0;
         let mut exit = false;
+        let mut redraw = false; 
         if let Some(pressed_key) = pressed_key {
-            match pressed_key {
+            keys.insert(pressed_key);
+        }
+
+        for key in keys.iter() {
+            match key {
                 KeyboardKey::KEY_A => {
                     mandelbrot.zoom(-10.0);
+                    redraw = true;
                 }
                 KeyboardKey::KEY_S => {
                     mandelbrot.zoom(10.0);
+                    redraw = true;
                 }
                 KeyboardKey::KEY_Q => {
                     exit = true;
                 }
                 KeyboardKey::KEY_R => {
                     mandelbrot.reset();
+                    redraw = true;
                 }
                 KeyboardKey::KEY_UP => {
                     mandelbrot.delta_y(-10);
+                    redraw = true;
                 }
                 KeyboardKey::KEY_DOWN => {
                     mandelbrot.delta_y(10);
+                    redraw = true;
                 }
                 KeyboardKey::KEY_RIGHT => {
                     mandelbrot.delta_x(10);
+                    redraw = true;
                 }
                 KeyboardKey::KEY_LEFT => {
                     mandelbrot.delta_x(-10);
+                    redraw = true;
                 }
                 _ => (),
             }
@@ -245,7 +265,11 @@ fn main() {
         if exit {
             break;
         }
-        mandelbrot.draw_mandelbrot(&mut image);
+
+        if redraw {
+            mandelbrot.draw_mandelbrot(&mut image);
+        }
+
         let texture = rl
             .load_texture_from_image(&thread, &image)
             .expect("Error creating texture");

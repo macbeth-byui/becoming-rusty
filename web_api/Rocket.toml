@@ -1,0 +1,3 @@
+[default.databases.horizons]
+url = "postgres://cmacbeth:winn121@localhost/horizons"
+
