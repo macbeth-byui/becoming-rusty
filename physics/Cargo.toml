@@ -1,0 +1,9 @@
+[package]
+name = "physics"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+raylib = "3.7"
+rand = "0.8"
+rustc-hash = "1.1.0"
